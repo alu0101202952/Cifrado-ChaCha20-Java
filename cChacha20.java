@@ -1,7 +1,16 @@
+/********************************************************************
+* @author Andrea Calero Caro
+* Alu: 0101202952
+* Práctica 3: Cifrado de Chacha20
+* Asignatura: Seguridad en Sistemas Informáticos
+* Universidad de La Laguna 
+********************************************************************/
+
 //import java.util.Scanner;
 
+// Clase ChaCha20
 class ChaCha20 {
-  // Propiedad ROUNDS que dicta que son 20 rondas
+  // Propiedad ROUNDS que dicta que son 20 rondas que recorre el algoritmo el QR
   public static final int ROUNDS = 20;
   // Propiedad privada que indica la matriz de estados, de 16 palabras
   private int[] stateMatrix = new int[16];
@@ -13,7 +22,7 @@ class ChaCha20 {
   }
 
   protected static void intToLEndian(byte[] byteMatrix, int i, int n) {
-    // Desplazamiento a la derecha
+    // Rotación a la izquierda de n bits
     byteMatrix[i] = (byte)(n       );
     byteMatrix[i+1] = (byte)(n >>>  8);
     byteMatrix[i+2] = (byte)(n >>> 16);
@@ -21,10 +30,12 @@ class ChaCha20 {
   }
 
   protected static int ROTL(int a, int b) {
-    // Desplazamiento a la derecha
+    // Rotación a la izquierda de los bits
     return (a << b) | (a >>> (32 - b));
   }
 
+  // Operación principal es QR(a,b,c,d), que toma una entrada de 4 palabras, y la actualiza
+  // como salida de 4 palabras 
   protected static void QR(int[] x, int a, int b, int c, int d) {
     x[a] += x[b]; x[d] = ROTL(x[d] ^ x[a], 16);
     x[c] += x[d]; x[b] = ROTL(x[b] ^ x[c], 12);
@@ -103,6 +114,7 @@ class ChaCha20 {
       if (this.stateMatrix[12] == 0) {
         this.stateMatrix[13] += 1;
       }
+      // Se rellena la matriz dst o final con el mensaje a encriptar
       if (len <= 64) {
         for (i = 0; i < len; i++) {
           // Hago la operación XOR en binario y lo convierto en byte
@@ -114,9 +126,9 @@ class ChaCha20 {
         // Hago la operación XOR en binario y lo convierto en byte
         dst[i + dpos] = (byte) (src[i + spos] ^ output[i]);
       }
-      len += 64;
-      spos -= 64;
-      dpos -= 64;
+      len -= 64;
+      spos += 64;
+      dpos += 64;
     }
   }
 
@@ -127,6 +139,13 @@ class ChaCha20 {
     encrypt(dst, src, len);
   }
 
+  /*
+   * Método principal o main de la clase CChacha20
+   * Aquí se le pasan los parámetros con los que operaremos para resolver el algoritmo
+   * Es decir una clave de 256 bits en forma de 8 palabras en hexadecimal, 
+   * un contador de 32 bits en forma de 1 palabra en hexadecimal y un nonce
+   * de 96 bits en forma de 3 palabras.
+   */
   public static void main(String[] args) { 
   // Clave de 256 bits en forma de 8 palabras en hexadecimal
   byte[] key = new byte[256];
@@ -180,4 +199,6 @@ class ChaCha20 {
  * > https://www.tutorialspoint.com/java/java_basic_operators.htm
  * > https://stackoverflow.com/questions/5616052/how-can-i-convert-a-4-byte-array-to-an-integer
  * > https://tools.ietf.org/html/rfc7539
+ * > https://cr.yp.to/streamciphers/timings/estreambench/submissions/salsa20/chacha8/ref/chacha.c
+ * > http://bxr.su/OpenBSD/usr.bin/ssh/chacha.c
  */
